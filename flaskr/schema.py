@@ -1,19 +1,32 @@
 import graphene
 from graphene import relay
 from graphene_sqlalchemy import SQLAlchemyConnectionField, SQLAlchemyObjectType, utils
-from models import Department as DepartmentModel
-from models import Employee as EmployeeModel
-from models import Role as RoleModel
+from . import models
+# from . import modelsDepartment as DepartmentModel
+# from . import modelsEmployee as models.Employee
+# from . import modelsRole as models.Role
+
+
+class BaseConnection(relay.Connection):
+
+    class Meta:
+        abstract = True
+
+    total_count = graphene.Int()
+
+    @staticmethod
+    def resolve_total_count(self, info):
+        return self.length
 
 
 class Department(SQLAlchemyObjectType):
 
     class Meta:
-        model = DepartmentModel
+        model = models.Department
         interfaces = (relay.Node, )
 
 
-class DepartmentConnection(relay.Connection):
+class DepartmentConnection__(BaseConnection):
 
     class Meta:
         node = Department
@@ -22,11 +35,11 @@ class DepartmentConnection(relay.Connection):
 class Employee(SQLAlchemyObjectType):
 
     class Meta:
-        model = EmployeeModel
+        model = models.Employee
         interfaces = (relay.Node, )
 
 
-class EmployeeConnection(relay.Connection):
+class EmployeeConnection__(BaseConnection):
 
     class Meta:
         node = Employee
@@ -35,17 +48,17 @@ class EmployeeConnection(relay.Connection):
 class Role(SQLAlchemyObjectType):
 
     class Meta:
-        model = RoleModel
+        model = models.Role
         interfaces = (relay.Node, )
 
 
-class RoleConnection(relay.Connection):
+class RoleConnection__(BaseConnection):
 
     class Meta:
         node = Role
 
 
-SortEnumEmployee = utils.sort_enum_for_model(EmployeeModel, 'SortEnumEmployee',
+SortEnumEmployee = utils.sort_enum_for_model(models.Employee, 'SortEnumEmployee',
                                              lambda c, d: c.upper() + ('_ASC' if d else '_DESC'))
 
 
@@ -53,15 +66,15 @@ class Query(graphene.ObjectType):
     node = relay.Node.Field()
     # Allow only single column sorting
     all_employees = SQLAlchemyConnectionField(
-        EmployeeConnection,
+        EmployeeConnection__,
         sort=graphene.Argument(
             SortEnumEmployee,
-            default_value=utils.EnumValue('id_asc', EmployeeModel.id.asc())))
+            default_value=utils.EnumValue('id_asc', models.Employee.id.asc())))
     # Allows sorting over multiple columns, by default over the primary key
-    all_roles = SQLAlchemyConnectionField(RoleConnection)
+    all_roles = SQLAlchemyConnectionField(RoleConnection__)
     # Disable sorting over this field
     all_departments = SQLAlchemyConnectionField(
-        DepartmentConnection, sort=None)
+        DepartmentConnection__, sort=None)
 
 
 schema = graphene.Schema(query=Query, types=[Department, Employee, Role])

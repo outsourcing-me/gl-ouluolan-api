@@ -1,25 +1,25 @@
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.orm import backref, relationship
 
-from database import Base
+from . import database
 
 
-class Department(Base):
+class Department(database.Base):
     __tablename__ = 'department'
     id = Column(Integer, primary_key=True)
-    name = Column(String)
+    name = Column(String(32))
 
 
-class Role(Base):
+class Role(database.Base):
     __tablename__ = 'roles'
     role_id = Column(Integer, primary_key=True)
-    name = Column(String)
+    name = Column(String(32))
 
 
-class Employee(Base):
+class Employee(database.Base):
     __tablename__ = 'employee'
     id = Column(Integer, primary_key=True)
-    name = Column(String)
+    name = Column(String(32))
     # Use default=func.now() to set the default hiring time
     # of an Employee to be the current time when an
     # Employee record was created

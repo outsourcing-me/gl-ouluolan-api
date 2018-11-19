@@ -48,7 +48,8 @@ def create_app(test_config=None):
     #     }
     #   }
     # }'''.strip()
-
+    # env = os.environ.get('FLASK_ENV', 'development')
+    # print('env', env)
     app.add_url_rule(
         '/graphql', view_func=GraphQLView.as_view('graphql', schema=schema.schema, graphiql=True))
 
