@@ -1,8 +1,7 @@
 from flask import Flask
 import os
-from . import database, schema
-from flask_graphql import GraphQLView
-# from schema import schema
+# from flask_graphql import GraphQLView
+from graphene_file_upload.flask import FileUploadGraphQLView
 
 
 def create_app(test_config=None):
@@ -10,11 +9,11 @@ def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY='dev',
-        DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite'),
+        # DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite'),
     )
 
-    from . import api
-    app.register_blueprint(api.bp)
+    # from . import api
+    # app.register_blueprint(api.bp)
 
     if test_config is None:
         # load the instance config, if it exists, when not testing
@@ -29,35 +28,18 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    # default_query = '''
-    # {
-    #   allEmployees {
-    #     edges {
-    #       node {
-    #         id,
-    #         name,
-    #         department {
-    #           id,
-    #           name
-    #         },
-    #         role {
-    #           id,
-    #           name
-    #         }
-    #       }
-    #     }
-    #   }
-    # }'''.strip()
-    # env = os.environ.get('FLASK_ENV', 'development')
-    # print('env', env)
-    app.add_url_rule(
-        '/graphql', view_func=GraphQLView.as_view('graphql', schema=schema.schema, graphiql=True))
+    with app.app_context():
+        from . import database, schema
+        # env = os.environ.get('FLASK_ENV', 'development')
+        # print('env', env)
+        app.add_url_rule(
+            '/graphql', view_func=FileUploadGraphQLView.as_view('graphql', schema=schema.schema, graphiql=True))
 
-    @app.teardown_appcontext
-    def shutdown_session(exception=None):
-        database.db_session.remove()
+        @app.teardown_appcontext
+        def shutdown_session(exception=None):
+            database.db_session.remove()
 
-    database.init_db()
+        database.init_db()
     return app
 
 

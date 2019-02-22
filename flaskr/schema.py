@@ -2,9 +2,7 @@ import graphene
 from graphene import relay
 from graphene_sqlalchemy import SQLAlchemyConnectionField, SQLAlchemyObjectType, utils
 from . import models
-# from . import modelsDepartment as DepartmentModel
-# from . import modelsEmployee as models.Employee
-# from . import modelsRole as models.Role
+from graphene_file_upload.scalars import Upload
 
 
 class BaseConnection(relay.Connection):
@@ -62,8 +60,30 @@ SortEnumEmployee = utils.sort_enum_for_model(models.Employee, 'SortEnumEmployee'
                                              lambda c, d: c.upper() + ('_ASC' if d else '_DESC'))
 
 
+class UploadMutation(graphene.Mutation):
+
+    class Arguments:
+        file = Upload(required=True)
+
+    success = graphene.Boolean()
+
+    def mutate(self, info, file, **kwargs):
+        # do something with your file
+
+        return UploadMutation(success=True)
+
+
+class MyMutations(graphene.ObjectType):
+    upload_file = UploadMutation.Field()
+
+
 class Query(graphene.ObjectType):
     node = relay.Node.Field()
+    employee = graphene.Field(Employee, name=graphene.String())
+
+    def resolve_employee(self, info, **args):
+        query = Employee.get_query(info)
+        return query.filter_by(name=args['name']).first()
     # Allow only single column sorting
     all_employees = SQLAlchemyConnectionField(
         EmployeeConnection__,
@@ -77,4 +97,5 @@ class Query(graphene.ObjectType):
         DepartmentConnection__, sort=None)
 
 
-schema = graphene.Schema(query=Query, types=[Department, Employee, Role])
+schema = graphene.Schema(query=Query, mutation=MyMutations, types=[
+                         Department, Employee, Role])
